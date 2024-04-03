@@ -49,8 +49,6 @@ class LogCabin(QuiltingBlock):
             "starting_square_completed", 2)
         self.starting_square = self.add_seam_allowance(
             self.starting_square_completed)
-        self.x = self.starting_square
-        self.y = self.starting_square
         self.n_rounds = config.get("n_rounds", 2)
         self.strip_width_completed_2 = config.get(
             "strip_width_completed_2", self.strip_width_completed_1)
@@ -77,6 +75,15 @@ class LogCabin(QuiltingBlock):
         logger.debug(f"sides_dict = {self.sides_dict}")
         logger.debug(f"pieces_dict = {self.pieces_dict}")
 
+    def get_config(self):
+        return {
+            "seam_allowance": self.seam_allowance,
+            "strip_width_completed_1": self.strip_width_completed_1,
+            "starting_square_completed": self.starting_square_completed,
+            "n_rounds": self.n_rounds,
+            "strip_width_completed_2": self.strip_width_completed_2,
+        }
+
     def add_seam_allowance(self, x):
         return x + 2*self.seam_allowance
 
@@ -94,8 +101,8 @@ class LogCabin(QuiltingBlock):
                 current_sizes['Bottom'] + added_value)
             self.sides_dict['Right'].append(current_sizes['Right'])
             self.sides_dict['Left'].append(current_sizes['Left'])
-        logger.info(f"{side} side added, current sizes now updated: \
-        {{k: v[-1] for k, v in self.sides_dict.items()}}")
+        logger.info(f"{side} side added, current sizes now updated:")
+        logger.info(f"{({k: v[-1] for k, v in self.sides_dict.items()})}")
 
     def build_round(self, round, width):
         for side in self.sides:
@@ -167,13 +174,13 @@ class LogCabin(QuiltingBlock):
             )
 
     def calculate_yardage(self):
-        self.fabric_1_yardage = (
-            sum(
-                [i.width * i.length for v in self.fabric_1_pieces.values()
-                 for i in v])
+        def _helper(fabric_pieces):
+            return sum(
+                [i.width * i.length for v in fabric_pieces.values() for i in v]
+            )
+        self.fabric_1_yardage = _helper(
+            self.fabric_1_pieces
         )
-        self.fabric_2_yardage = (
-            sum(
-                [i.width * i.length for v in self.fabric_2_pieces.values()
-                 for i in v])
+        self.fabric_2_yardage = _helper(
+            self.fabric_2_pieces
         )
