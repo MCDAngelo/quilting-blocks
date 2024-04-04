@@ -69,6 +69,9 @@ class LogCabin(QuiltingBlock):
             'Bottom': [self.starting_square],
             'Left': [self.starting_square],
         }
+        self.round_sizes = {
+            0: self.block_size(self.starting_square, self.starting_square),
+        }
 
         logger.info("Initializing log cabin with the following parameters:")
         logger.info(config)
@@ -111,6 +114,8 @@ class LogCabin(QuiltingBlock):
             self.pieces_dict[side].append(
                 self.piece_info(round, width, current_sizes[side]))
             self.add_side(current_sizes, side, width)
+        self.round_sizes[round] = self.block_size(
+            self.sides_dict['Top'][-1], self.sides_dict['Right'][-1])
 
     def build_cabin(self):
         for i in range(1, self.n_rounds + 1):
@@ -161,6 +166,12 @@ class LogCabin(QuiltingBlock):
         # check file info stuff?
         with open(file_name, 'w') as f:
             # clean up to DRY
+            f.write("=========Log Cabin Quilt Block=========\n")
+            f.write("~Sizes per round: \n")
+            f.write("\n".join(
+                [f"Round {k}: {v.width} x {v.height}"
+                    for k, v in self.round_sizes.items()]))
+            f.write("\n")
             f.write("=========Fabric one: =========\n")
             f.write(f"~Total yardage: {self.fabric_1_yardage}\n")
             f.write(f"~Rounds: {self.fabric_1_rounds}\n")
