@@ -132,8 +132,12 @@ class LogCabin(QuiltingBlock):
     def organize_fabric_pieces(self):
         self.fabric_1_pieces = {k: [i for i in v if i.round % 2 == 1]
                                 for k, v in self.pieces_dict.items()}
+        self.fabric_1_rounds = [
+            i for i in range(1, self.n_rounds + 1) if i % 2 == 1]
         self.fabric_2_pieces = {k: [i for i in v if i.round % 2 == 0]
                                 for k, v in self.pieces_dict.items()}
+        self.fabric_2_rounds = [
+            i for i in range(0, self.n_rounds + 1) if i % 2 == 0]
         logger.info(f"Pieces required for fabric one: \n\
         {self.fabric_1_pieces}")
         logger.info(f"Pieces required for fabric two: \n\
@@ -159,6 +163,7 @@ class LogCabin(QuiltingBlock):
             # clean up to DRY
             f.write("=========Fabric one: =========\n")
             f.write(f"~Total yardage: {self.fabric_1_yardage}\n")
+            f.write(f"~Rounds: {self.fabric_1_rounds}\n")
             f.write(self.format_fabric_pieces(self.fabric_1_pieces))
             f.write("\n~Summarized pieces required: \n")
             f.write("\n".join(
@@ -167,6 +172,7 @@ class LogCabin(QuiltingBlock):
             f.write("\n")
             f.write("=========Fabric two: =========\n")
             f.write(f"~Total yardage: {self.fabric_2_yardage}\n")
+            f.write(f"~Rounds: {self.fabric_2_rounds}\n")
             f.write(self.format_fabric_pieces(self.fabric_2_pieces))
             f.write("\n~Summarized pieces required: \n")
             f.write("\n".join(
