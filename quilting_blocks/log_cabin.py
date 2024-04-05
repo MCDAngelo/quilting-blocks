@@ -187,17 +187,46 @@ class LogCabin(QuiltingBlock):
             f.write(self.format_fabric_pieces(self.fabric_2_pieces))
             f.write("\n~Summarized pieces required: \n")
             f.write("\n".join(
-                [f"{v}: {k}" for k, v in self.fabric_2_pieces_counter.items()])
+                [f"{v} x {k}" for k, v in self.fabric_2_pieces_counter.items()])
             )
 
     def calculate_yardage(self):
-        def _helper(fabric_pieces):
+        def _square_inches_helper(fabric_pieces):
             return sum(
                 [i.width * i.length for v in fabric_pieces.values() for i in v]
             )
-        self.fabric_1_yardage = _helper(
+
+        def _length_helper(fabric_pieces):
+            return sum(
+                [i.length for v in fabric_pieces.values()
+                 for i in v if i.round > 0]
+            )
+
+        self.fabric_1_yardage = _square_inches_helper(
             self.fabric_1_pieces
         )
-        self.fabric_2_yardage = _helper(
+        self.fabric_2_yardage = _square_inches_helper(
             self.fabric_2_pieces
         )
+        self.fabric_1_total_length = _length_helper(
+            self.fabric_1_pieces
+        )
+        self.fabric_2_total_length = _length_helper(
+            self.fabric_2_pieces
+        )
+
+        # Add up lengths of pieces for each fabric that have the same width
+        # Then, assuming a width of 42 inches for the fabric, start with a
+        # naive approach of dividing the total length by 42 to get the number
+        # of strips required for that width.
+        # To improve the naive approach, sort the pieces of fabric by length
+        # and then iterate through the pieces, combining pieces that have
+        # lengths that add up to 42 or less. This will give the minimum number
+        # of strips required for the fabric.
+        # Alternatively, the naive approach can start with one strip for each
+        # piece of fabric, and then combine strips that have a total length
+        # of 42 or less until no further combinations can be found.
+        # This is a greedy approach, but it should work for the purposes of
+        # this exercise.
+        # An alternative approach would be to use dynamic programming
+        # to find the minimum number of strips required for the fabric.
