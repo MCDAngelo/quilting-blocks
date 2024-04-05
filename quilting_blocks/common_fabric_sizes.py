@@ -1,14 +1,14 @@
 from collections import namedtuple
 
-fabric_size = namedtuple("fabric_size", ["width", "length", "square_inches"])
+fabric_size = namedtuple("fabric_size", ["length", "width", "square_inches"])
 
 FABRIC_CUTS = {
-    "fat_quarter": fabric_size(18, 22, 396),
-    "fat_eighth": fabric_size(9, 22, 198),
-    "yard": fabric_size(36, 44, 1584),
-    "fat_half": fabric_size(18, 44, 792),
-    "fat_sixteenth": fabric_size(4.5, 22, 99),
-    "half_yard": fabric_size(18, 44, 792),
-    "quarter_yard": fabric_size(9, 22, 198),
-    "eighth_yard": fabric_size(4.5, 22, 99),
+    "fat_quarter": fabric_size(18, 21, 378),
+    "fat_eighth": fabric_size(9, 21, 189),
+    "yard": fabric_size(36, 42, 1512),
+    "fat_half": fabric_size(18, 42, 756),
+    "fat_sixteenth": fabric_size(4.5, 21, 94.5),
+    "half_yard": fabric_size(18, 42, 756),
+    "quarter_yard": fabric_size(9, 21, 189),
+    "eighth_yard": fabric_size(4.5, 21, 94.5),
 }
