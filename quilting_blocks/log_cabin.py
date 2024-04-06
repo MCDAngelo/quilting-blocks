@@ -147,13 +147,13 @@ class LogCabin(QuiltingBlock):
         {self.fabric_1_pieces}")
         logger.info(f"Pieces required for fabric two: \n\
         {self.fabric_2_pieces}")
-        self.fabric_1_pieces_counter = Counter(
+        self.fabric_1_pieces_count = Counter(
             [i for v in self.fabric_1_pieces.values() for i in v]
         )
-        self.fabric_2_pieces_counter = Counter(
+        self.fabric_2_pieces_count = Counter(
             [i for v in self.fabric_2_pieces.values() for i in v]
         )
-        self.calculate_yardage()
+        self.calculate_sq_inches()
 
     def format_fabric_pieces(self, fabric_pieces):
         return "\n".join(
@@ -173,24 +173,24 @@ class LogCabin(QuiltingBlock):
                     for k, v in self.round_sizes.items()]))
             f.write("\n")
             f.write("=========Fabric one: =========\n")
-            f.write(f"~Total yardage: {self.fabric_1_yardage}\n")
+            f.write(f"~Total squared inches: {self.fabric_1_sq_inches}\n")
             f.write(f"~Rounds: {self.fabric_1_rounds}\n")
             f.write(self.format_fabric_pieces(self.fabric_1_pieces))
             f.write("\n~Summarized pieces required: \n")
             f.write("\n".join(
-                [f"{v} x {k}" for k, v in self.fabric_1_pieces_counter.items()])
+                [f"{v} x {k}" for k, v in self.fabric_1_pieces_count.items()])
             )
             f.write("\n")
             f.write("=========Fabric two: =========\n")
-            f.write(f"~Total yardage: {self.fabric_2_yardage}\n")
+            f.write(f"~Total squared inches: {self.fabric_2_sq_inches}\n")
             f.write(f"~Rounds: {self.fabric_2_rounds}\n")
             f.write(self.format_fabric_pieces(self.fabric_2_pieces))
             f.write("\n~Summarized pieces required: \n")
             f.write("\n".join(
-                [f"{v} x {k}" for k, v in self.fabric_2_pieces_counter.items()])
+                [f"{v} x {k}" for k, v in self.fabric_2_pieces_count.items()])
             )
 
-    def calculate_yardage(self):
+    def calculate_sq_inches(self):
         def _square_inches_helper(fabric_pieces):
             return sum(
                 [i.width * i.length for v in fabric_pieces.values() for i in v]
@@ -202,10 +202,10 @@ class LogCabin(QuiltingBlock):
                  for i in v if i.round > 0]
             )
 
-        self.fabric_1_yardage = _square_inches_helper(
+        self.fabric_1_sq_inches = _square_inches_helper(
             self.fabric_1_pieces
         )
-        self.fabric_2_yardage = _square_inches_helper(
+        self.fabric_2_sq_inches = _square_inches_helper(
             self.fabric_2_pieces
         )
         self.fabric_1_total_length = _length_helper(

@@ -51,6 +51,6 @@ print(f"A 3x3 quarter log cabin (on point) quilt will require \
 white_fabric = FABRIC_CUTS.get('fat_quarter')
 
 quarter_lc_per_white_fq = white_fabric.square_inches / (
-    lc.fabric_1_yardage / 4)
+    lc.fabric_1_sq_inches / 4)
 print(f"Each fat quarter of white can make \
 {quarter_lc_per_white_fq} quarter log cabin blocks")
