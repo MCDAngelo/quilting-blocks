@@ -78,7 +78,8 @@ def main():
         """
 
         pieces = [i for v in pieces_dict.values() for i in v]
-        pieces = sorted(pieces, key=attrgetter('length'), reverse=True)
+        pieces = sorted(pieces, key=attrgetter(
+            'width', 'length'), reverse=True)
         logger.debug(f"Sorted pieces: {pieces}")
         n_strips = {i.width: 0 for i in pieces}
         leftovers = {i.width: [] for i in pieces}
