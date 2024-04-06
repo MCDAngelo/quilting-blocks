@@ -74,7 +74,7 @@ class LogCabin(QuiltingBlock):
         }
 
         logger.info("Initializing log cabin with the following parameters:")
-        logger.info(config)
+        logger.info(self.get_config())
         logger.debug(f"sides_dict = {self.sides_dict}")
         logger.debug(f"pieces_dict = {self.pieces_dict}")
 
