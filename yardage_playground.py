@@ -49,13 +49,13 @@ def main():
         for k, v in FABRIC_CUTS.items():
             if (v.length >= max_width and v.width >= max_length
                     and check_sq_inches(v, pieces_sq_inches)):
-                logger.debug(f"Fabric option {k} is sufficient")
+                logger.debug(f"Fabric option {k} may be sufficient")
                 possible_options.append(k)
                 # remove ceiling from below
         factor = 10
-        yardage_val = math.ceil(max_length*factor/36)/factor
+        sq_inches_val = math.ceil(max_length*factor/36)/factor
         possible_options.append(
-            f"custom - {yardage_val} yards ({max_length} inches)")
+            f"custom - {sq_inches_val} yards ({max_length} inches)")
         return possible_options
 
     def check_max_length(fabric, pieces):
@@ -82,15 +82,15 @@ def main():
         logger.debug(f"Sorted pieces: {pieces}")
         n_strips = {i.width: 0 for i in pieces}
         leftovers = {i.width: [] for i in pieces}
-        cut_pieces = []
-        uncut_pieces = []
+        accounted_pieces = []
+        unaccounted_pieces = []
 
-        def _create_strip(fabric, piece, leftovers, cut_pieces):
+        def _create_strip(fabric, piece, leftovers, accounted_pieces):
             n_strips[piece.width] += 1
-            cut_pieces.append(piece)
+            accounted_pieces.append(piece)
             if fabric.width - piece.length > 0:
                 leftovers[piece.width].append(fabric.width - piece.length)
-            return leftovers, cut_pieces
+            return leftovers, accounted_pieces
 
         for i, piece in enumerate(pieces):
             logger.debug(f"Piece {i}: {piece}")
@@ -99,7 +99,7 @@ def main():
             if len(subcuts) > 0:
                 if piece.length in subcuts:
                     subcuts.remove(piece.length)
-                    cut_pieces.append(piece)
+                    accounted_pieces.append(piece)
                     logger.info(f"Piece {i} matches subcut - {piece}")
                 elif (max(subcuts) >= piece.length):
                     # find closest match:
@@ -110,42 +110,44 @@ def main():
                     remaining = closest - piece.length
                     if remaining > 0:
                         subcuts.append(remaining)
-                    cut_pieces.append(piece)
+                    accounted_pieces.append(piece)
                     logger.info(
                         f"Piece {i} cut from subcut with {remaining} "
                         f"remaining - {piece}")
                 elif piece.length > fabric.width:
                     logger.debug(f"Piece {i} too long for subcut {piece}")
-                    uncut_pieces.append(piece)
+                    unaccounted_pieces.append(piece)
                 else:
-                    leftovers, cut_pieces = _create_strip(
-                        fabric, piece, leftovers, cut_pieces)
+                    leftovers, accounted_pieces = _create_strip(
+                        fabric, piece, leftovers, accounted_pieces)
                     logger.info(
                         f"Piece {i} cut from new strip of fabric - {piece}")
                 leftovers[piece.width] = subcuts
             else:
                 if piece.length > fabric.width:
                     logger.debug(f"Piece {i} too long for subcut {piece}")
-                    uncut_pieces.append(piece)
+                    unaccounted_pieces.append(piece)
                 else:
-                    leftovers, cut_pieces = _create_strip(
-                        fabric, piece, leftovers, cut_pieces)
+                    leftovers, accounted_pieces = _create_strip(
+                        fabric, piece, leftovers, accounted_pieces)
                     logger.info(
                         f"Piece {i} cut from new strip of fabric - {piece}")
 
-        if len(uncut_pieces) > 0:
-            logger.debug(f"{len(uncut_pieces)} uncut pieces: {uncut_pieces}")
+        if len(unaccounted_pieces) > 0:
+            logger.debug(f"{len(unaccounted_pieces)} pieces unaccounted for: {
+                         unaccounted_pieces}")
 
-        return n_strips, cut_pieces, leftovers
+        return n_strips, accounted_pieces, leftovers
 
     logger.debug(f"white square inches: {white.square_inches}")
-    logger.debug(f"required square inches: {lc.fabric_1_yardage}")
+    logger.debug(f"required square inches: {lc.fabric_1_sq_inches}")
     logger.debug(f"sufficient sq inches: {
-                 check_sq_inches(white, lc.fabric_1_yardage)}")
+                 check_sq_inches(white, lc.fabric_1_sq_inches)}")
     logger.debug(f"sufficient length for largest piece: {
                  check_max_length(white, lc.fabric_1_pieces)}")
     logger.debug(f"fabric options: {
-                 find_fabric_options(lc.fabric_1_pieces, lc.fabric_1_yardage)}")
+                 find_fabric_options(lc.fabric_1_pieces,
+                                     lc.fabric_1_sq_inches)}")
     logger.debug(foo(white, lc.fabric_1_pieces))
 
 
