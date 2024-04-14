@@ -36,7 +36,8 @@ class LogCabin(QuiltingBlock):
     # or X' + W - 2SA
     # where self.seam_allowance = seam allowance, X' = starting length,
     # W = width of strip being added
-    piece_info = namedtuple("piece_info", ["round", "width", "length"])
+    piece_info = namedtuple(
+        "piece_info", ["piece_id", "round", "width", "length"])
     sides = ['Top', 'Right', 'Bottom', 'Left']
 
     def __init__(self, config):
@@ -56,7 +57,7 @@ class LogCabin(QuiltingBlock):
             self.strip_width_completed_2)
         self.pieces_dict = {
             'Middle': [self.piece_info(
-                0, self.starting_square, self.starting_square
+                0, 0, self.starting_square, self.starting_square
             )],
             'Top':  [],
             'Right': [],
@@ -108,11 +109,12 @@ class LogCabin(QuiltingBlock):
         logger.info(f"{({k: v[-1] for k, v in self.sides_dict.items()})}")
 
     def build_round(self, round, width):
-        for side in self.sides:
+        for i, side in enumerate(self.sides):
             logger.info(f"Adding {width} strip to {side.lower()} side.")
             current_sizes = {k: v[-1] for k, v in self.sides_dict.items()}
             self.pieces_dict[side].append(
-                self.piece_info(round, width, current_sizes[side]))
+                self.piece_info(
+                    round + (i+1)*.1, round, width, current_sizes[side]))
             self.add_side(current_sizes, side, width)
         self.round_sizes[round] = self.block_size(
             self.sides_dict['Top'][-1], self.sides_dict['Right'][-1])
@@ -148,10 +150,12 @@ class LogCabin(QuiltingBlock):
         logger.info(f"Pieces required for fabric two: \n\
         {self.fabric_2_pieces}")
         self.fabric_1_pieces_count = Counter(
-            [i for v in self.fabric_1_pieces.values() for i in v]
+            [i._replace(piece_id=None, round=None)
+             for v in self.fabric_1_pieces.values() for i in v]
         )
         self.fabric_2_pieces_count = Counter(
-            [i for v in self.fabric_2_pieces.values() for i in v]
+            [i._replace(piece_id=None, round=None)
+             for v in self.fabric_2_pieces.values() for i in v]
         )
         self.calculate_sq_inches()
 
