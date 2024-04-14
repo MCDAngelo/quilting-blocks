@@ -68,7 +68,8 @@ def _cut_fabric(fabric, piece, subcuts):
 
 def foo(fabric, pieces_dict):
     """
-    This function should be used once a fabric size has been selected
+    This function uses a greedy approach to determine how to cut a piece of
+    fabric into the required pieces
     """
 
     pieces = [i for v in pieces_dict.values() for i in v]
@@ -118,10 +119,10 @@ def foo(fabric, pieces_dict):
         ):
             logger.debug(f"Piece {i} too long for fabric {piece}")
             unaccounted_pieces.append(piece)
-        leftovers[piece.width] = subcuts
+            leftovers[piece.width] = subcuts
 
-    logger.debug(f"{len(unaccounted_pieces)} pieces unaccounted for: {
-        unaccounted_pieces}")
+    logger.debug(f"{len(unaccounted_pieces)} pieces unaccounted for:"
+                 f"{unaccounted_pieces}")
 
     return n_strips, accounted_pieces, leftovers
 
@@ -139,37 +140,34 @@ def main():
     lc.build_cabin()
 
     lc.organize_fabric_pieces()
+
+    fabric_1_options = find_fabric_options(
+        lc.fabric_1_pieces, lc.fabric_1_sq_inches)
+    fabric_2_options = find_fabric_options(
+        lc.fabric_2_pieces, lc.fabric_2_sq_inches)
     logger.info("**********FABRIC 1 PIECES")
     logger.info(lc.fabric_1_pieces)
     logger.info("**********FABRIC 1 TOTAL LENGTH")
     logger.info(lc.fabric_1_total_length)
-    logger.debug(f"white square inches: {
-        white.square_inches}")
-    logger.debug(f"required square inches: {
-        lc.fabric_1_sq_inches}")
-    logger.debug(f"sufficient sq inches: {
-        check_sq_inches(white, lc.fabric_1_sq_inches)}")
-    logger.debug(f"sufficient length for largest piece: {
-        check_max_length(white, lc.fabric_1_pieces)}")
-    logger.debug(f"fabric options: {
-        find_fabric_options(lc.fabric_1_pieces,
-                            lc.fabric_1_sq_inches)}")
+    logger.debug(f"white square inches: {white.square_inches}")
+    logger.debug(f"required square inches: {lc.fabric_1_sq_inches}")
+    logger.debug("sufficient sq inches:"
+                 f"{check_sq_inches(white, lc.fabric_1_sq_inches)}")
+    logger.debug("sufficient length for largest piece:"
+                 f"{check_max_length(white, lc.fabric_1_pieces)}")
+    logger.debug(f"fabric options: {fabric_1_options}")
     logger.debug(foo(white, lc.fabric_1_pieces))
     logger.info("\n\n**********FABRIC 2 PIECES")
     logger.info(lc.fabric_2_pieces)
     logger.info("**********FABRIC 2 TOTAL LENGTH")
     logger.info(lc.fabric_2_total_length)
-    logger.debug(f"colour square inches: {
-        colour.square_inches}")
-    logger.debug(f"required square inches: {
-        lc.fabric_2_sq_inches}")
-    logger.debug(f"sufficient sq inches: {
-        check_sq_inches(colour, lc.fabric_2_sq_inches)}")
-    logger.debug(f"sufficient length for largest piece: {
-        check_max_length(colour, lc.fabric_2_pieces)}")
-    logger.debug(f"fabric options: {
-        find_fabric_options(lc.fabric_2_pieces,
-                            lc.fabric_2_sq_inches)}")
+    logger.debug(f"colour square inches: {colour.square_inches}")
+    logger.debug(f"required square inches: {lc.fabric_2_sq_inches}")
+    logger.debug("sufficient sq inches:"
+                 f"{check_sq_inches(colour, lc.fabric_2_sq_inches)}")
+    logger.debug("sufficient length for largest piece:"
+                 f"{check_max_length(colour, lc.fabric_2_pieces)}")
+    logger.debug(f"fabric options: {fabric_2_options}")
     logger.debug(foo(colour, lc.fabric_2_pieces))
 
 
