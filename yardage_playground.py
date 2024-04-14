@@ -1,3 +1,4 @@
+import itertools
 import logging
 import sys
 import math
@@ -64,6 +65,56 @@ def _cut_fabric(fabric, piece, subcuts):
         subcuts.append(fabric.width - piece.length)
     new_fabric = fabric._replace(length=fabric.length - piece.width)
     return subcuts, new_fabric
+
+
+def get_sorted_pieces(pieces_dict):
+    if len(pieces_dict) == 0:
+        return []
+    pieces = [i for v in pieces_dict.values() for i in v]
+    return sorted(pieces, key=attrgetter('width', 'length'), reverse=True)
+
+
+def recursive_approach(
+    pieces_dict,
+    max_val,
+    n_combinations,
+    found_combos=None,
+):
+    pieces = get_sorted_pieces(pieces_dict)
+    if found_combos is None:
+        found_combos = []
+    if len(pieces) == 0:
+        return found_combos
+    if len(pieces_dict.values()) >= 1 & n_combinations <= len(pieces):
+        combinations = itertools.combinations(pieces, n_combinations)
+        # following won't work when we increase n_combinations:
+        # complete_combos = list(filter(
+        #     lambda x: x[0].length + x[1].length == max_val, combinations))
+        complete_combos = list(
+            filter(
+                lambda x: reduce(lambda a, b: a.length +
+                                 b.length, x) == max_val,
+                combinations))
+        if len(complete_combos) == 0:
+            recursive_approach(pieces, max_val - 1,
+                               n_combinations, found_combos)
+        elif len(complete_combos) == 1:
+            found_combos.append(complete_combos)
+            for i in complete_combos:
+                pieces_dict.remove(i)
+            recursive_approach(
+                pieces, max_val, n_combinations + 1, found_combos)
+        else:
+            # Need to figure out how to handle multiple complete combos
+            # First check if the complete combos are non-overlapping
+            # If non-overlapping, then we can use them all
+            # If overlapping, perhaps randomly select one and then run
+            # the whole thing multiple times to determine the "best" option
+            # Will need a cost function to determine the best option
+
+            pass
+    else:
+        return found_combos, pieces_dict
 
 
 def foo(fabric, pieces_dict):
