@@ -14,6 +14,47 @@ logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
 
+class Quilt:
+    def __init__(self, blocks):
+        self.blocks = blocks
+        self.n_blocks = len(blocks)
+
+    def fabric_requirements(self):
+
+        pass
+
+
+class CuttingPlan:
+    def __init__(self, quilting_block, fabric_cuts):
+        self.fabric_cuts = FABRIC_CUTS
+        self.quilting_blocks = quilting_block
+        self.preferred_fc = fabric_cuts
+
+    def get_pieces_from_all_blocks(self):
+        pass
+
+    def get_max_dim(self):
+        pass
+
+    def check_sq_inches(self):
+        pass
+
+    def get_fabric_options(self):
+        pass
+
+    def get_sorted_pieces(self, pieces_dict):
+        if len(pieces_dict) == 0:
+            return []
+        pieces = [i for v in pieces_dict.values() for i in v]
+        return sorted(pieces, key=attrgetter('width', 'length'), reverse=True)
+
+    def _cut_fabric(self):
+        pass
+
+    def greedy_algo(self, fabric_cut):
+        pass
+
+
 def check_sq_inches(fabric, required_sq_inches):
     return fabric.square_inches >= required_sq_inches
 
