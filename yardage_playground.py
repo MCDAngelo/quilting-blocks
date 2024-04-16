@@ -73,7 +73,21 @@ def get_sorted_pieces(pieces_dict):
     return sorted(pieces, key=attrgetter('width', 'length'), reverse=True)
 
 
-def foo(fabric, pieces_dict):
+def split_wider_strip(longer_widths, piece, subcuts, leftovers):
+    for w, l in longer_widths.items():
+        n_cuts = int(w // piece.width)
+        remainder = w % piece.width
+        logger.debug(f"Dividing {w} strips into {n_cuts} {piece.width}"
+                     f" wide pieces with {remainder} leftover")
+        lengths = [item for item in l for _ in range(n_cuts)]
+        subcuts.extend(lengths)
+        leftovers.pop(w)
+        if remainder > 0:
+            leftovers[remainder] = l
+    return subcuts, leftovers
+
+
+def fabric_cutting_approach(fabric, pieces_dict):
     """
     This function uses a greedy approach to determine how to cut a piece of
     fabric into the required pieces
@@ -90,57 +104,99 @@ def foo(fabric, pieces_dict):
     for i, piece in enumerate(pieces):
         logger.debug(f"Piece {i}: {piece}")
         subcuts = leftovers.get(piece.width, [])
+
+        # Determine if there are any reminaing pieces that are wider than
+        # the current piece
+        longer_widths = {
+            k: v for k, v in leftovers.items()
+            if k > piece.width and len(v) > 0
+        }
+        logger.debug(f"Longer widths: {longer_widths}")
+
+        # If there are any wider pieces, cut them and add the resulting strips
+        # to the subcuts list
+        if len(longer_widths) > 0:
+            subcuts, leftovers = split_wider_strip(
+                longer_widths, piece, subcuts, leftovers)
+
         logger.debug(f"Subcuts available: {subcuts}")
+
+        # If the piece is too long for the subcuts but fits in the fabric,
+        # cut a new strip
         if (
-                (fabric.length >= piece.width)
-                and ((len(subcuts) == 0)
-                     or (piece.length > max(subcuts)))
+            (fabric.length >= piece.width)
+            and (fabric.width >= piece.length)
+            and ((len(subcuts) == 0)
+                 or (piece.length > max(subcuts)))
         ):
-            subcuts, fabric = _cut_fabric(
-                fabric, piece, subcuts)
-            n_strips[piece.width] += 1
-            accounted_pieces.append(piece)
-            logger.info(
-                f"Piece {i} cut from new strip of fabric"
-                f" now measuring {fabric.length}x{fabric.width}")
+            fabric = cut_new_strip(fabric, subcuts, n_strips,
+                                   accounted_pieces, i, piece)
+
+        # If the piece fits in the subcut, cut it from there
         elif len(subcuts) > 0 and piece.length <= max(subcuts):
-            # find largest strip that will accommodate piece
-            eligible = list(
-                filter(lambda x: x - piece.length >= 0, subcuts))
-            closest = (
-                eligible[0] if len(eligible) == 1
-                else reduce(lambda x, y: x if x < y else y, eligible)
-            )
-            subcuts.remove(closest)
-            closest_fabric = fabric._replace(
-                length=piece.width, width=closest, name="subcut")
-            subcuts, _ = _cut_fabric(
-                closest_fabric, piece, subcuts)
-            accounted_pieces.append(piece)
-            logger.info(f"Piece {i} cut from subcut")
+            cut_from_subcut(fabric, subcuts, accounted_pieces, i, piece)
+        # If the piece is too big for the fabric, add it to the unaccounted
         elif (
-            (piece.length > fabric.width)
+            (piece.length > max(fabric.width, fabric.length))
             or (piece.width > fabric.length)
         ):
             logger.debug(f"Piece {i} too long for fabric {piece}")
             unaccounted_pieces.append(piece)
             leftovers[piece.width] = subcuts
 
-    logger.debug(f"{len(unaccounted_pieces)} pieces unaccounted for:"
-                 f"{unaccounted_pieces}")
+    logger.info(f"{len(unaccounted_pieces)} pieces unaccounted for:"
+                f"{unaccounted_pieces}")
 
     return n_strips, accounted_pieces, leftovers
+
+
+def cut_new_strip(fabric, subcuts, n_strips, accounted_pieces, i,  piece):
+    # Following can be removed if going with an approach where the amount of
+    # fabric needed is calculated first and then the fabric is cut to size
+    # vs. current top down approach (enter fabric size and see if it fits)
+    subcuts, fabric = _cut_fabric(fabric, piece, subcuts)
+    n_strips[piece.width] += 1
+    accounted_pieces.append(piece)
+    logger.info(f"Piece {i} ({piece.piece_id}) cut from new strip of fabric"
+                f" now measuring {fabric.length}x{fabric.width}")
+    return fabric
+
+
+def find_closest_subcut(subcuts, piece):
+    # find largest strip that will accommodate piece
+    eligible = list(
+        filter(lambda x: x - piece.length >= 0, subcuts))
+    closest = (
+        eligible[0] if len(eligible) == 1
+        else reduce(lambda x, y: x if x < y else y, eligible)
+    )
+    return closest
+
+
+def cut_from_subcut(fabric, subcuts, accounted_pieces, i, piece):
+    # cut from closest existing strip that will accommodate piece
+    closest = find_closest_subcut(subcuts, piece)
+    subcuts.remove(closest)
+    closest_fabric = fabric._replace(
+        length=piece.width, width=closest, name="subcut")
+    subcuts, _ = _cut_fabric(
+        closest_fabric, piece, subcuts)
+    accounted_pieces.append(piece)
+    logger.info(f"Piece {i} ({piece.piece_id}) cut from subcut")
 
 
 def main():
     white = FABRIC_CUTS.get('fat_quarter')
     colour = FABRIC_CUTS.get('fat_quarter')
+    seam_allowance = 0.25
     config = {
-        "starting_square_completed": 4.5,
         "n_rounds": 7,
         "strip_width_completed": 0.5,
-        "strip_width_completed_2": 1.75,
+        "strip_width_completed_2": 2,
     }
+    config['starting_square_completed'] = (
+        2 * config['strip_width_completed_2'] + 2*seam_allowance
+    )
     lc = LogCabin(config=config)
     lc.build_cabin()
 
@@ -161,7 +217,10 @@ def main():
     logger.debug("sufficient length for largest piece:"
                  f"{check_max_length(white, lc.fabric_1_pieces)}")
     logger.debug(f"fabric options: {fabric_1_options}")
-    logger.debug(foo(white, lc.fabric_1_pieces))
+    f1_n_strips, _, f1_leftovers = fabric_cutting_approach(
+        white, lc.fabric_1_pieces)
+    logger.info(f"Will need to cut {f1_n_strips} strips from fabric 1")
+    logger.info(f"Leftover pieces: {f1_leftovers}")
     logger.info("\n\n**********FABRIC 2 PIECES")
     logger.info(lc.fabric_2_pieces)
     logger.info("**********FABRIC 2 TOTAL LENGTH")
@@ -173,7 +232,10 @@ def main():
     logger.debug("sufficient length for largest piece:"
                  f"{check_max_length(colour, lc.fabric_2_pieces)}")
     logger.debug(f"fabric options: {fabric_2_options}")
-    logger.debug(foo(colour, lc.fabric_2_pieces))
+    f2_n_strips, _, f2_leftovers = fabric_cutting_approach(
+        colour, lc.fabric_2_pieces)
+    logger.info(f"Will need to cut {f2_n_strips} strips from fabric 1")
+    logger.info(f"Leftover pieces: {f2_leftovers}")
 
 
 if __name__ == '__main__':
