@@ -25,13 +25,28 @@ class Quilt:
 
 
 class CuttingPlan:
-    def __init__(self, quilting_block, fabric_cuts):
+    def __init__(
+            self,
+            quilting_blocks: list,
+            preferred_fabric_cuts: dict,
+            num_blocks=1,
+    ):
         self.fabric_cuts = FABRIC_CUTS
-        self.quilting_blocks = quilting_block
-        self.preferred_fc = fabric_cuts
+        self.preferred_fc = preferred_fabric_cuts
+        self.quilting_blocks = quilting_blocks
+        self.num_blocks = num_blocks
+        # May be list of dicts with fabric as key or list of objects that
+        # have a fabric attribute
+        self.pieces = []
 
     def get_pieces_from_all_blocks(self):
-        pass
+        for block in self.quilting_blocks:
+            for _ in range(self.num_blocks):
+                # to do this, will need to save pieces with fabric info
+                # e.g. fabric 1 vs 2 in LogCabin
+                # or have an aux function that can organize pieces
+                # by fabric across blocks
+                self.pieces.append(block.pieces)
 
     def get_max_dim(self):
         pass
@@ -204,7 +219,7 @@ def cut_new_strip(fabric, subcuts, n_strips, accounted_pieces, i,  piece):
 
 
 def find_closest_subcut(subcuts, piece):
-    # find largest strip that will accommodate piece
+    # Find largest strip that will accommodate piece
     eligible = list(
         filter(lambda x: x - piece.length >= 0, subcuts))
     closest = (
